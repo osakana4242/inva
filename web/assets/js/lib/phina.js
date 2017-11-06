@@ -1400,7 +1400,7 @@
    * @return {Object} 条件にマッチした最初のインデックス、または -1
    */
   Array.prototype.$method("findIndex", function(fn, self) {
-    var target = null;
+    var target = -1;
 
     this.some(function(elm, i) {
       if (fn.call(self, elm, i, this)) {
