@@ -1,10 +1,9 @@
 
 oskn.namespace('oskn', function () {
-	this.Ingame = function(stateId, appCore) {
+	this.Ingame = function(stateId, app) {
 		super_.call(this, stateId);
-		this.appCore = appCore;
+		this.app = app;
 		this.sm = this.createStates();
-		this.sm.switchState(StateId.S1);
 		this.freeTargets = [];
 		this.resultType = ResultType.NONE;
 	};
@@ -14,15 +13,15 @@ oskn.namespace('oskn', function () {
 	oskn.inherits(cls, super_);
 
 	cls.prototype.enter = function () {
-		this.ship = new oskn.Ship().setup(this.appCore);
+		this.ship = new oskn.Ship(this.app).setup();
 		this.ship.id = new oskn.AppObjectId().setup(oskn.AppObjectIdType.SHIP, 1);
-		this.enemy = new oskn.EnemyService().setup(this.appCore);
-		this.ownBullet = new oskn.OwnBulletService().setup(this.appCore);
-		this.explosion = new oskn.ExplosionService().setup(this.appCore);
+		this.enemy = new oskn.EnemyService(this.app).setup();
+		this.ownBullet = new oskn.OwnBulletService(this.app).setup();
+		this.explosion = new oskn.ExplosionService(this.app).setup();
 
-		this.deadRect = this.appCore.pool.rect.alloc();
+		this.deadRect = this.app.pool.rect.alloc();
 		this.deadRect.x = 0;
-		this.deadRect.width = this.appCore.setting.screenSize.x;
+		this.deadRect.width = this.app.setting.screenSize.x;
 		this.deadRect.y = this.ship.rect().y;
 		this.deadRect.height = this.ship.rect().height;
 
@@ -32,12 +31,16 @@ oskn.namespace('oskn', function () {
 		var top = 32;
 		for (var yi = 0; yi < yCount; ++yi) {
 			for (var xi = 0; xi < xCount; ++xi) {
-				var item = this.appCore.pool.enemy.alloc().setup(this.appCore);
+				var item = this.app.pool.enemy.alloc().setup(this.app);
 				item.position.x = left + xi * 16;
 				item.position.y = top + yi * 16;
 				this.enemy.table.add(item);
 			}
 		}
+
+		this.resultType = ResultType.NONE;
+
+		this.sm.switchState(StateId.S1);
 	};
 
 	cls.prototype.exit = function () {
@@ -62,14 +65,14 @@ oskn.namespace('oskn', function () {
 	};
 
 	cls.prototype.createStates = function () {
-		var sm = new oskn.StateMachine("Ingame");
+		var sm = new oskn.StateMachine(this.app, "Ingame");
 		sm.addState(new oskn.StateBehaviour(StateId.S1, this,
 			function (self) {
 			},
 			function (self) {
 			},
 			function (self) {
-				if (30 <= self.sm.frameCount) {
+				if (0.5 <= self.sm.stateTime) {
 					self.sm.switchState(StateId.S2);
 				}
 		}));
@@ -103,11 +106,12 @@ oskn.namespace('oskn', function () {
 				return Collision.testRectRect(this.deadRect, _enemy.rect());
 			}, self);
 			if (hit !== null) {
-				// 罩私此.
+				// 鄂ｩ遘∵ｭ､.
 				self.ship.isDead();
 				self.resultType = ResultType.NG;
 			}
 			var isGameClear = self.enemy.table.values.length <= 0;
+			isGameClear |= self.app.keyboard.getKey(self.app.setting.key.gameClear);
 			if (isGameClear) {
 				self.resultType = ResultType.OK;
 			}
@@ -121,12 +125,26 @@ oskn.namespace('oskn', function () {
 			}
 		}));
 
-		sm.addState(new oskn.StateBehaviour(StateId.GAME_CLAEAR, this,
-			function (self) {
+		sm.addState(new oskn.StateBehaviour(StateId.GAME_CLEAR, this,
+		function(self) {
+		}, function(self) {
+		}, function(self) {
+			if (0.5 <= self.sm.stateTime) {
+				if (self.app.pointer.button.up) {
+					self.app.sm.switchState(oskn.AppStateId.TITLE);
+				}
+			}
 		}));
 
 		sm.addState(new oskn.StateBehaviour(StateId.GAME_OVER, this,
-			function (self) {
+		function(self) {
+		}, function(self) {
+		}, function(self) {
+			if (0.5 <= self.sm.stateTime) {
+				if (self.app.pointer.button.up) {
+					self.app.sm.switchState(oskn.AppStateId.TITLE);
+				}
+			}
 		}));
 
 		return sm;
@@ -138,11 +156,14 @@ oskn.namespace('oskn', function () {
 		NG: 2,
 	});
 
-	var StateId = oskn.createEnum('StateId', {
+	oskn.IngameStateId = oskn.createEnum('StateId', {
 		S1: 1,
 		S2: 2,
 		GAME_CLEAR: 3,
 		GAME_OVER: 4,
+		END: 5,
 	});
+
+	var StateId = oskn.IngameStateId;
 });
 

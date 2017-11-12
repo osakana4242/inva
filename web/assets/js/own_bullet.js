@@ -1,6 +1,7 @@
 oskn.namespace('oskn', function () {
 
-	oskn.OwnBullet = function() {
+	oskn.OwnBullet = function(app) {
+		this.app = app;
 		this.sm = this.createStates();
 		this.onFree = Subject();
 		this.onDead = Subject();
@@ -9,16 +10,25 @@ oskn.namespace('oskn', function () {
 
 	var cls = oskn.OwnBullet;
 
-	cls.prototype.setup = function(appCore) {
-		this.appCore = appCore;
-		this.scene = this.appCore.sm.currentState;
-		this.position = appCore.pool.vector2.alloc();
-		this.power = appCore.pool.vector2.alloc();
+	cls.prototype.setup = function() {
+		this.id = oskn.AppObjectId.getEmpty();
+		this.scene = this.app.sm.currentState;
+		this.position = this.app.pool.vector2.alloc();
+		this.power = this.app.pool.vector2.alloc();
 		this.sm.switchState(StateId.S1);
-		this.rect_ = this.appCore.pool.rect.alloc();
-		this.rect_.set(0, 0, this.appCore.setting.ownBullet.size.x, this.appCore.setting.ownBullet.size.y);
+		this.rect_ = this.app.pool.rect.alloc();
+		this.rect_.set(0, 0, this.app.setting.ownBullet.size.x, this.app.setting.ownBullet.size.y);
 		this.isDead_ = false;
 		return this;
+	};
+
+	cls.prototype.free = function() {
+		this.sm.exitState();
+		this.onFree.onNext();
+		this.scene.ownBullet.table.remove(this);
+		this.position.free();
+		this.power.free();
+		this.rect_.free();
 	};
 
 	cls.prototype.isDead = function(v) {
@@ -28,21 +38,13 @@ oskn.namespace('oskn', function () {
 			if (this.isDead_ === v) return;
 			this.isDead_ = v;
 			if (this.isDead_) {
-				var explosion = this.appCore.pool.explosion.alloc().setup(this.appCore);
+				var explosion = this.app.pool.explosion.alloc().setup();
 				explosion.position.copyFrom(this.position);
 				this.scene.explosion.table.add(explosion);
 				this.onDead.onNext();
 				this.scene.freeTargets.push(this);
 			}
 		}
-	};
-
-	cls.prototype.free = function() {
-		this.onFree.onNext();
-		this.scene.ownBullet.table.remove(this);
-		this.position.free();
-		this.power.free();
-		this.rect_.free();
 	};
 
 	cls.prototype.rect = function () {
@@ -56,7 +58,7 @@ oskn.namespace('oskn', function () {
 	};
 
 	cls.prototype.createStates = function () {
-		var sm = new oskn.StateMachine("IngameEnemy");
+		var sm = new oskn.StateMachine(this.app, "IngameEnemy");
 		sm.addState(new oskn.StateBehaviour(StateId.S1, this,
 			function (self) {
 				self.sm.switchState(StateId.S2);

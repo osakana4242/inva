@@ -1,28 +1,30 @@
 oskn.namespace('oskn', function () {
 
-	this.Ship = function() {
+	oskn.Ship = function(app) {
+		this.app = app;
 		this.sm = this.createStates();
 		this.isDead_ = false;
 	};
 
-	var cls = this.Ship;
+	var cls = oskn.Ship;
 
-	cls.prototype.setup = function(appCore) {
-		this.appCore = appCore;
-		this.position = appCore.pool.vector2.alloc();
-		this.targetPosition = appCore.pool.vector2.alloc();
-		this.scene = this.appCore.sm.currentState;
-		this.position.x = oskn.AppMath.lerp(this.appCore.setting.ship.xMin, this.appCore.setting.ship.xMax, 0.5);
-		this.position.y = this.appCore.setting.ship.baseY;
+	cls.prototype.setup = function() {
+		this.id = oskn.AppObjectId.getEmpty();
+		this.position = this.app.pool.vector2.alloc();
+		this.targetPosition = this.app.pool.vector2.alloc();
+		this.scene = this.app.sm.currentState;
+		this.position.x = oskn.AppMath.lerp(this.app.setting.ship.xMin, this.app.setting.ship.xMax, 0.5);
+		this.position.y = this.app.setting.ship.baseY;
 		this.targetPosition.copyFrom(this.position);
-		this.rect_ = this.appCore.pool.rect.alloc();
-		this.rect_.set(0, 0, this.appCore.setting.ship.size.x, this.appCore.setting.ship.size.y);
+		this.rect_ = this.app.pool.rect.alloc();
+		this.rect_.set(0, 0, this.app.setting.ship.size.x, this.app.setting.ship.size.y);
 		this.isDead_ = false;
 		this.sm.switchState(StateId.S1);
 		return this;
 	};
 
 	cls.prototype.free = function() {
+		this.sm.exitState();
 		this.rect_.free();
 		this.targetPosition.free();
 		this.position.free();
@@ -35,7 +37,7 @@ oskn.namespace('oskn', function () {
 			if (this.isDead_ === v) return;
 			this.isDead_ = v;
 			if (this.isDead_) {
-				var explosion = this.appCore.pool.explosion.alloc().setup(this.appCore);
+				var explosion = this.app.pool.explosion.alloc().setup();
 				explosion.position.copyFrom(this.position);
 				this.scene.explosion.table.add(explosion);
 				this.onDead.onNext();
@@ -52,23 +54,22 @@ oskn.namespace('oskn', function () {
 
 	cls.prototype.update = function() {
 		this.sm.update();
-		//if (this.appCore.pointer.button.stay) {
-			this.targetPosition.copyFrom(this.appCore.pointer.position);
-			this.targetPosition.x = oskn.AppMath.clamp(this.targetPosition.x, this.appCore.setting.ship.xMin, this.appCore.setting.ship.xMax);
-			this.targetPosition.y = this.appCore.setting.ship.baseY;
-		//}
-		if (this.appCore.pointer.button.up) {
+		this.targetPosition.copyFrom(this.app.pointer.position);
+		this.targetPosition.x = oskn.AppMath.clamp(this.targetPosition.x, this.app.setting.ship.xMin, this.app.setting.ship.xMax);
+		this.targetPosition.y = this.app.setting.ship.baseY;
+
+		if (this.app.pointer.button.up) {
 			if (!this.bullet) {
-				this.bullet = this.appCore.pool.ownBullet.alloc().setup(this.appCore);
+				this.bullet = this.app.pool.ownBullet.alloc().setup();
 				this.bullet.position.copyFrom(this.position);
-				this.bullet.power.set(0, -this.appCore.setting.ownBullet.speed);
+				this.bullet.power.set(0, -this.app.setting.ownBullet.speed);
 				this.scene.ownBullet.table.add(this.bullet);
 				this.bullet.onDead.subscribe(Observer().setup(this, function (self) {
 					self.bullet = null;
 				}));
 			}
 		}
-		var v = this.appCore.pool.vector2.alloc();
+		var v = this.app.pool.vector2.alloc();
 		v.x = oskn.AppMath.lerp(this.position.x, this.targetPosition.x, 0.5);
 		v.y = oskn.AppMath.lerp(this.position.y, this.targetPosition.y, 0.5);
 		this.position.copyFrom(v);
@@ -76,7 +77,7 @@ oskn.namespace('oskn', function () {
 	};
 
 	cls.prototype.createStates = function () {
-		var sm = new oskn.StateMachine("Ship");
+		var sm = new oskn.StateMachine(this.app, "Ship");
 		sm.addState(new oskn.StateBehaviour(StateId.S1, this,
 			function (self) {
 				self.sm.switchState(StateId.S2);

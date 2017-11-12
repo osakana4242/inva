@@ -1,7 +1,9 @@
 oskn.namespace('oskn', function () {
 
 	this.AppCore = function() {
+		this.app = this;
 		this.setting = oskn.setting;
+		var app = this.app;
 
 		this.pool = {
 			vector2: InstancePool(function() {
@@ -21,15 +23,15 @@ oskn.namespace('oskn', function () {
 			}),
 
 			enemy: InstancePool(function() {
-				return new oskn.Enemy();
+				return new oskn.Enemy(app);
 			}),
 
 			ownBullet: InstancePool(function() {
-				return new oskn.OwnBullet();
+				return new oskn.OwnBullet(app);
 			}),
 
 			explosion: InstancePool(function() {
-				return new oskn.Explosion();
+				return new oskn.Explosion(app);
 			}),
 		};
 		this.pointer = {
@@ -84,12 +86,14 @@ oskn.namespace('oskn', function () {
 	};
 
 	cls.prototype.createStates = function () {
-		var sm = new oskn.StateMachine("AppCore");
+		var sm = new oskn.StateMachine(this.app, "AppCore");
 		sm.verbose = true;
 		sm.addState(new oskn.StateBehaviour(StateId.S1, this,
 			function (self) {
-				self.sm.switchState(StateId.INGAME);
+				self.sm.switchState(StateId.TITLE);
 		}));
+
+		sm.addState(new oskn.Title(StateId.TITLE, this));
 
 		sm.addState(new oskn.Ingame(StateId.INGAME, this));
 
@@ -100,11 +104,14 @@ oskn.namespace('oskn', function () {
 		return sm;
 	};
 
-	var StateId = oskn.createEnum('StateId', {
+	oskn.AppStateId = oskn.createEnum('StateId', {
 		S1: 1,
-		INGAME: 2,
-		S3: 3,
+		TITLE: 2,
+		INGAME: 3,
+		S3: 4,
 	});
+
+	var StateId = oskn.AppStateId;
 
 });
 
@@ -115,6 +122,7 @@ oskn.namespace('oskn', function () {
 		this.fps = app.setting.time.fps;
 		this.oneFrameTime = 1.0 / this.fps;
 		this.timeScale = 1.0;
+		this.deltaTime = this.oneFrameTime;
 		this.frameElapsedTime = 0.0;
 		this.frameCount = 0;
 		/** 消化が必要な時間. */

@@ -1,27 +1,28 @@
 oskn.namespace('oskn', function () {
-	this.OneIdTable = function() {
+	this.OneIdTable = function(app) {
+		this.app = app;
 		this.values = [];
 	};
 	var cls = this.OneIdTable;
 
-	cls.prototype.setup = function(appCore, idType) {
-		this.appCore = appCore;
+	cls.prototype.setup = function(idType) {
 		this.autoIncrementId = 0;
 		this.idType = idType;
 		return this;
 	};
 
 	cls.prototype.free = function() {
-		this.forEach(function (item) {
+		for (var i = this.values.length - 1; 0 <= i; --i) {
+			var item = this.values[i];
 			item.free();
-		});
+		}
 		this.values.splice(0, this.values.length);
 		this.autoIncrementId = 0;
 	};
 
 	cls.prototype.createId = function() {
 		++this.autoIncrementId;
-		return new oskn.AppObjectId().setup(this.idType, this.autoIncrementId);
+		return oskn.AppObjectId.getOrCreate(this.idType, this.autoIncrementId);
 	};
 
 	cls.prototype.findIndexById = function(id) {
@@ -39,7 +40,7 @@ oskn.namespace('oskn', function () {
 	};
 
 	cls.prototype.add = function(item) {
-		if (!item.id) {
+		if (!item.id || item.id.isEmpty()) {
 			item.id = this.createId();
 		}
 		if (this.findById(item.id) !== null) {

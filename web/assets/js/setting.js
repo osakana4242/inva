@@ -3,7 +3,7 @@ oskn.namespace('oskn', function () {
 		oskn.setting = {
 			time: {
 				fps: 60,
-				fastScale: 8,
+				fastScale: 64,
 				slowScale: 1 / 8,
 			},
 			screenSize: {

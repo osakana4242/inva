@@ -1,20 +1,22 @@
 
 oskn.namespace('oskn', function () {
-	this.AppObjectIdType = {
+	oskn.AppObjectIdType = {
+		NONE: 0,
 		SHIP: 1,
 		ENEMY: 2,
 		ENEMY_BULLET: 3,
 		OWN_BULLET: 4,
 		EXPLOSION: 5,
+		RESULT_TELOP: 6,
 	};
 });
 
 oskn.namespace('oskn', function () {
 
-	this.AppObjectId = function () {
+	oskn.AppObjectId = function () {
 		this.value = 0;
 	};
-	var cls = this.AppObjectId;
+	var cls = oskn.AppObjectId;
 
 	cls.SHIFT = 8;
 
@@ -39,6 +41,19 @@ oskn.namespace('oskn', function () {
 		return this.value === other.value;
 	};
 
+	cls.prototype.isEmpty = function() {
+		return this.value === 0;
+	};
+
+	cls.getEmpty = function() {
+		return cls.getOrCreate(oskn.AppObjectId.NONE, 0);
+	};
+
+	cls.getOrCreate = function(type, id) {
+		var inst = new cls();
+		inst.setup(type, id);
+		return inst;
+	};
 });
 
 

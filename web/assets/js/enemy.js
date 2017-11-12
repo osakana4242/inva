@@ -1,25 +1,27 @@
 oskn.namespace('oskn', function () {
 
-	this.Enemy = function () {
+	this.Enemy = function (app) {
+		this.app = app;
+		this.sm = this.createStates();
 	};
 
 	var cls = this.Enemy;
 
-	cls.prototype.setup = function(appCore) {
-		this.appCore = appCore;
-		this.scene = this.appCore.sm.currentState;
-		this.position = appCore.pool.vector2.alloc();
-		this.targetPosition = appCore.pool.vector2.alloc();
+	cls.prototype.setup = function() {
+		this.id = oskn.AppObjectId.getEmpty();
+		this.scene = this.app.sm.currentState;
+		this.position = this.app.pool.vector2.alloc();
+		this.targetPosition = this.app.pool.vector2.alloc();
 		this.dirX = 1;
-		this.sm = this.createStates();
 		this.sm.switchState(StateId.S1);
-		this.rect_ = this.appCore.pool.rect.alloc();
-		this.rect_.set(0, 0, this.appCore.setting.enemy.size.x, this.appCore.setting.enemy.size.y);
+		this.rect_ = this.app.pool.rect.alloc();
+		this.rect_.set(0, 0, this.app.setting.enemy.size.x, this.app.setting.enemy.size.y);
 		this.isDead_ = false;
 		return this;
 	};
 
 	cls.prototype.free = function() {
+		this.sm.exitState();
 		this.rect_.free();
 		this.targetPosition.free();
 		this.position.free();
@@ -39,7 +41,7 @@ oskn.namespace('oskn', function () {
 			if (this.isDead_ === v) return;
 			this.isDead_ = v;
 			if (this.isDead_) {
-				var explosion = this.appCore.pool.explosion.alloc().setup(this.appCore);
+				var explosion = this.app.pool.explosion.alloc().setup(this.app);
 				explosion.position.copyFrom(this.position);
 				this.scene.explosion.table.add(explosion);
 				this.scene.freeTargets.push(this);
@@ -80,7 +82,7 @@ oskn.namespace('oskn', function () {
 	};
 
 	cls.prototype.createStates = function () {
-		var sm = new oskn.StateMachine("Enemy");
+		var sm = new oskn.StateMachine(this.app, "Enemy");
 
 		sm.addState(new oskn.StateBehaviour(StateId.S1, this,
 			function (self) {
@@ -90,7 +92,7 @@ oskn.namespace('oskn', function () {
 		sm.addState(new oskn.StateBehaviour(StateId.SIDE_MOVE, this,
 			function (self) {
 				var info = self.scene.enemy.info;
-				if (info.dirChangeFrameCount !== -1 && info.dirChangeFrameCount <= self.appCore.sm.frameCount) {
+				if (info.dirChangeFrameCount !== -1 && info.dirChangeFrameCount <= self.app.sm.frameCount) {
 					info.dirX *= -1;
 					info.dirChangeFrameCount = -1;
 				}
@@ -99,10 +101,10 @@ oskn.namespace('oskn', function () {
 					self.sm.switchState(StateId.DOWN_MOVE);
 					return;
 				}
-				self.position.x += self.dirX * self.appCore.setting.enemy.sideMoveDistance;
-				if (((info.dirX < 0) && (self.position.x <= self.appCore.setting.enemy.xMin)) ||
-					((0 < info.dirX) && (self.appCore.setting.enemy.xMax <= self.position.x))) {
-					info.dirChangeFrameCount = self.appCore.sm.frameCount + 1;
+				self.position.x += self.dirX * self.app.setting.enemy.sideMoveDistance;
+				if (((info.dirX < 0) && (self.position.x <= self.app.setting.enemy.xMin)) ||
+					((0 < info.dirX) && (self.app.setting.enemy.xMax <= self.position.x))) {
+					info.dirChangeFrameCount = self.app.sm.frameCount + 1;
 				}
 			}, function (self) {
 			}, function (self) {
@@ -124,7 +126,7 @@ oskn.namespace('oskn', function () {
 
 		sm.addState(new oskn.StateBehaviour(StateId.DOWN_MOVE, this,
 			function (self) {
-				self.position.y += self.appCore.setting.enemy.downMoveDistance;
+				self.position.y += self.app.setting.enemy.downMoveDistance;
 			}, function (self) {
 			}, function (self) {
 			var t = oskn.AppMath.progress01(self.sm.frameCount, self.calcWaitFrameCount());

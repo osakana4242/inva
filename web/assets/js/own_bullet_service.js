@@ -1,12 +1,13 @@
-oskn.namespace('oskn', function () {
-	this.OwnBulletService = function () {
-		this.table = new oskn.OneIdTable();
-	};
-	var cls = this.OwnBulletService;
 
-	cls.prototype.setup = function (appCore) {
-		this.appCore = appCore;
-		this.table.setup(this.appCore, oskn.AppObjectIdType.OWN_BULLET);
+oskn.namespace('oskn', function () {
+	oskn.OwnBulletService = function(app) {
+		this.app = app;
+		this.table = new oskn.OneIdTable(app);
+	};
+	var cls = oskn.OwnBulletService;
+
+	cls.prototype.setup = function() {
+		this.table.setup(oskn.AppObjectIdType.OWN_BULLET);
 		return this;
 	};
 
