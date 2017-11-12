@@ -84,8 +84,8 @@ oskn.namespace('oskn', function () {
 			function () {
 		}, function() {
 		}, function() {
-			var duration = 30;
-			var t = oskn.AppMath.progress01(this.sm.frameCount, duration);
+			var duration = 1;
+			var t = oskn.AppMath.progress01(this.sm.stateTime, duration);
 			this.progress_ = t;
 			if (oskn.AppMath.isProgressCompleted(t)) {
 				this.sm.switchState(StateId.S2);

@@ -41,6 +41,11 @@ oskn.namespace('oskn', function () {
 			'./assets/img/ship.png',
 			'./assets/img/own_bullet_01.png',
 			'./assets/img/explosion_01_01.png',
+			'./assets/img/explosion_01_02.png',
+			'./assets/img/explosion_01_03.png',
+			'./assets/img/explosion_01_04.png',
+			'./assets/img/explosion_01_05.png',
+			'./assets/img/explosion_01_06.png',
 		];
 		images.forEach(function (path) {
 			var reg = /.+\/(.+?)([\?#;].*)?$/;
@@ -220,13 +225,25 @@ phina.define('MainScene', {
 				delete this.workDisplayables[item.id];
 			}
 			var nextImageId = 'explosion_01_01.png';
-			var index = oskn.AppMath.progressToIndex(item.getProgress(), 8);
+			var index = oskn.AppMath.progressToIndex(item.getProgress(), 12);
 			switch (index) {
 				case 0:
 					nextImageId = 'explosion_01_01.png';
 					break;
 				case 1:
-					nextImageId = 'own_bullet_01.png';
+					nextImageId = 'explosion_01_02.png';
+					break;
+				case 2:
+					nextImageId = 'explosion_01_03.png';
+					break;
+				case 3:
+					nextImageId = 'explosion_01_04.png';
+					break;
+				case 4:
+					nextImageId = 'explosion_01_05.png';
+					break;
+				case 5:
+					nextImageId = 'explosion_01_06.png';
 					break;
 				default:
 					nextImageId = '';
