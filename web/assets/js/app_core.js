@@ -1,38 +1,7 @@
 oskn.namespace('oskn', function () {
 
 	this.AppCore = function() {
-		this.setting = {
-			screenSize: {
-				x: 240,
-				y: 320,
-			},
-			ship: {
-				size: {
-					x: 8,
-					y: 8,
-				},
-				xMin: 16,
-				xMax: 240 - 16,
-				baseY: 240 - 8,
-			},
-			enemy: {
-				size: {
-					x: 8,
-					y: 8,
-				},
-				sideMoveDistance: 4,
-				downMoveDistance: 8,
-				xMin: 16,
-				xMax: 240 - 16,
-			},
-			ownBullet: {
-				speed: 4,
-				size: {
-					x: 2,
-					y: 4,
-				},
-			},
-		};
+		this.setting = oskn.setting;
 
 		this.pool = {
 			vector2: InstancePool(function() {
@@ -56,7 +25,7 @@ oskn.namespace('oskn', function () {
 			}),
 
 			ownBullet: InstancePool(function() {
-				return OwnBullet();
+				return new oskn.OwnBullet();
 			}),
 
 			explosion: InstancePool(function() {
@@ -67,6 +36,8 @@ oskn.namespace('oskn', function () {
 			position: this.pool.vector2.alloc(),
 			button: this.pool.button.alloc(),
 		};
+		this.time = new oskn.TimeService(this);
+		this.keyboard = null;
 		this.StateId = StateId;
 		this.sm = this.createStates();
 		this.sm.switchState(StateId.S1);
@@ -74,13 +45,27 @@ oskn.namespace('oskn', function () {
 
 	var cls = this.AppCore;
 
-	cls.prototype.update = function (app) {
-		this.captureInput(app);
-		this.sm.update();
+	cls.prototype.update = function (phinaApp) {
+		this.keyboard = phinaApp.keyboard;
+
+		var dt = this.time.oneFrameTime * this.time.timeScale;
+		if (this.keyboard.getKey(this.setting.key.playSpeedFast)) {
+			dt *= this.setting.time.fastScale;
+		} else if (this.keyboard.getKey(this.setting.key.playSpeedSlow)) {
+			dt *= this.setting.time.slowScale;
+		}
+
+		this.time.updateByDeltaTime(dt, phinaApp, this.innerUpdate, this);
 	};
 
-	cls.prototype.captureInput = function(app) {
-		var p1 = app.pointer;
+	cls.prototype.innerUpdate = function(phinaApp) {
+		this.captureInput(phinaApp);
+		this.sm.update();
+		this.time.update();
+	};
+
+	cls.prototype.captureInput = function(phinaApp) {
+		var p1 = phinaApp.pointer;
 		var p2 = this.pointer;
 		p2.position.copyFrom(p1.position);
 
@@ -92,6 +77,10 @@ oskn.namespace('oskn', function () {
 		p2.button.up = p2.button.stay && !b;
 		p2.button.down = !p2.button.stay && b;
 		p2.button.stay = b;
+
+		if (phinaApp.keyboard.getKey('c')) {
+			console.log('c!');
+		}
 	};
 
 	cls.prototype.createStates = function () {
@@ -117,5 +106,34 @@ oskn.namespace('oskn', function () {
 		S3: 3,
 	});
 
+});
+
+oskn.namespace('oskn', function () {
+
+	oskn.TimeService = function(app) {
+		this.app = app;
+		this.fps = app.setting.time.fps;
+		this.oneFrameTime = 1.0 / this.fps;
+		this.timeScale = 1.0;
+		this.frameElapsedTime = 0.0;
+		this.frameCount = 0;
+		/** 消化が必要な時間. */
+		this.needUpdateTime_ = 0.0;
+	};
+	var cls = oskn.TimeService;
+
+	cls.prototype.updateByDeltaTime = function(dt, phinaApp, func, funcThis) {
+		this.needUpdateTime_ += dt;
+		var needFrameCount = parseInt(this.needUpdateTime_ / this.oneFrameTime);
+		for (var i = 0; i < needFrameCount; ++i) {
+			func.call(funcThis, phinaApp);
+		}
+	};
+
+	cls.prototype.update = function() {
+		++this.frameCount;
+		this.frameElapsedTime += this.oneFrameTime;
+		this.needUpdateTime_ -= this.oneFrameTime;
+	};
 });
 

@@ -1,6 +1,6 @@
 oskn.namespace('oskn', function() {
 
-	this.StateMachine = function(name) {
+	oskn.StateMachine = function (name) {
 		this.name = name || "noname";
 		this.states = {};
 		this.currentState = new oskn.StateBehaviour(0);
@@ -10,7 +10,7 @@ oskn.namespace('oskn', function() {
 		this.verbose = false;
 	};
 
-	var cls = this.StateMachine;
+	var cls = oskn.StateMachine;
 
 	cls.prototype.update = function() {
 		this.refleshState();

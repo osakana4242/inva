@@ -24,6 +24,7 @@ oskn.namespace('oskn', function () {
 		this.onFree = Subject();
 		this.onDead = Subject();
 		this.isDead_ = false;
+		this.progress_ = 0.0;
 	};
 	var cls = oskn.Explosion;
 
@@ -36,7 +37,12 @@ oskn.namespace('oskn', function () {
 		this.rect_ = this.appCore.pool.rect.alloc();
 		this.rect_.set(0, 0, this.appCore.setting.ownBullet.size.x, this.appCore.setting.ownBullet.size.y);
 		this.isDead_ = false;
+		this.progress_ = 0.0;
 		return this;
+	};
+
+	cls.prototype.getProgress = function() {
+		return this.progress_;
 	};
 
 	cls.prototype.isDead = function(v) {
@@ -78,6 +84,7 @@ oskn.namespace('oskn', function () {
 		}, function() {
 			var duration = 30;
 			var t = oskn.AppMath.progress01(this.sm.frameCount, duration);
+			this.progress_ = t;
 			if (oskn.AppMath.isProgressCompleted(t)) {
 				this.sm.switchState(StateId.S2);
 			}

@@ -37,5 +37,10 @@ oskn.namespace('oskn', function () {
 		return 1 <= t;
 	};
 
+	cls.progressToIndex = function(t, n) {
+			var index = cls.clamp(parseInt(t * n), 0, n - 1);
+			return index;
+	};
+
 });
 

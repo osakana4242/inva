@@ -6,18 +6,12 @@ oskn.namespace('oskn', function () {
 		this.sm = this.createStates();
 		this.sm.switchState(StateId.S1);
 		this.freeTargets = [];
+		this.resultType = ResultType.NONE;
 	};
 
 	var cls = this.Ingame;
 	var super_ = oskn.StateBehaviour;
 	oskn.inherits(cls, super_);
-
-	cls.prototype.init = function(stateId, appCore) {
-		this.superInit(stateId);
-		this.appCore = appCore;
-		this.sm = this.createStates();
-		this.sm.switchState(StateId.S1);
-	};
 
 	cls.prototype.enter = function () {
 		this.ship = new oskn.Ship().setup(this.appCore);
@@ -71,7 +65,13 @@ oskn.namespace('oskn', function () {
 		var sm = new oskn.StateMachine("Ingame");
 		sm.addState(new oskn.StateBehaviour(StateId.S1, this,
 			function (self) {
-				self.sm.switchState(StateId.S2);
+			},
+			function (self) {
+			},
+			function (self) {
+				if (30 <= self.sm.frameCount) {
+					self.sm.switchState(StateId.S2);
+				}
 		}));
 
 		sm.addState(new oskn.StateBehaviour(StateId.S2, this,
@@ -103,13 +103,25 @@ oskn.namespace('oskn', function () {
 				return Collision.testRectRect(this.deadRect, _enemy.rect());
 			}, self);
 			if (hit !== null) {
-				// 死亡.
-				self.ship.free();
+				// 罩私此.
+				self.ship.isDead();
+				self.resultType = ResultType.NG;
+			}
+			var isGameClear = self.enemy.table.values.length <= 0;
+			if (isGameClear) {
+				self.resultType = ResultType.OK;
+			}
+			switch (self.resultType) {
+			case ResultType.OK:
+				self.sm.switchState(StateId.GAME_CLEAR);
+				break;
+			case ResultType.NG:
 				self.sm.switchState(StateId.GAME_OVER);
+				break;
 			}
 		}));
 
-		sm.addState(new oskn.StateBehaviour(StateId.S3, this,
+		sm.addState(new oskn.StateBehaviour(StateId.GAME_CLAEAR, this,
 			function (self) {
 		}));
 
@@ -120,10 +132,16 @@ oskn.namespace('oskn', function () {
 		return sm;
 	};
 
+	var ResultType = oskn.createEnum('ResultType', {
+		NONE: 0,
+		OK: 1,
+		NG: 2,
+	});
+
 	var StateId = oskn.createEnum('StateId', {
 		S1: 1,
 		S2: 2,
-		S3: 3,
+		GAME_CLEAR: 3,
 		GAME_OVER: 4,
 	});
 });

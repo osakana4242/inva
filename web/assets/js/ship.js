@@ -2,6 +2,7 @@ oskn.namespace('oskn', function () {
 
 	this.Ship = function() {
 		this.sm = this.createStates();
+		this.isDead_ = false;
 	};
 
 	var cls = this.Ship;
@@ -16,6 +17,7 @@ oskn.namespace('oskn', function () {
 		this.targetPosition.copyFrom(this.position);
 		this.rect_ = this.appCore.pool.rect.alloc();
 		this.rect_.set(0, 0, this.appCore.setting.ship.size.x, this.appCore.setting.ship.size.y);
+		this.isDead_ = false;
 		this.sm.switchState(StateId.S1);
 		return this;
 	};
@@ -24,6 +26,22 @@ oskn.namespace('oskn', function () {
 		this.rect_.free();
 		this.targetPosition.free();
 		this.position.free();
+	};
+
+	cls.prototype.isDead = function(v) {
+		if (v === undefined) {
+			return this.isDead_;
+		} else {
+			if (this.isDead_ === v) return;
+			this.isDead_ = v;
+			if (this.isDead_) {
+				var explosion = this.appCore.pool.explosion.alloc().setup(this.appCore);
+				explosion.position.copyFrom(this.position);
+				this.scene.explosion.table.add(explosion);
+				this.onDead.onNext();
+				this.scene.freeTargets.push(this);
+			}
+		}
 	};
 
 	cls.prototype.rect = function () {

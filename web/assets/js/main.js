@@ -174,6 +174,24 @@ phina.define('MainScene', {
 				} else {
 					delete this.workDisplayables[item.id];
 				}
+				var nextImageId = 'explosion_01_01.png';
+				var index = oskn.AppMath.progressToIndex(item.getProgress(), 8);
+				switch (index) {
+					case 0:
+						nextImageId = 'explosion_01_01.png';
+						break;
+					case 1:
+						nextImageId = 'own_bullet_01.png';
+						break;
+					default:
+						nextImageId = '';
+						break;
+				}
+				if (disp.image !== nextImage && nextImageId !== '') {
+        	var nextImage = phina.asset.AssetManager.get('image', nextImageId);
+					disp.image = nextImage;
+				}
+				disp.visible = nextImageId !== '';
 				disp.x = item.position.x;
 				disp.y = item.position.y;
 			}, this);
