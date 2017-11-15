@@ -4,6 +4,7 @@ oskn.namespace('oskn', function () {
 		this.app = app;
 		this.sm = this.createStates();
 		this.isDead_ = false;
+		this.bulletDisposer = new oskn.CompositDisposable();
 	};
 
 	var cls = oskn.Ship;
@@ -28,6 +29,7 @@ oskn.namespace('oskn', function () {
 		this.rect_.free();
 		this.targetPosition.free();
 		this.position.free();
+		this.bulletDisposer.clear();
 	};
 
 	cls.prototype.isDead = function(v) {
@@ -60,13 +62,15 @@ oskn.namespace('oskn', function () {
 
 		if (this.app.pointer.button.up) {
 			if (!this.bullet) {
+				this.bulletDisposer.clear();
 				this.bullet = this.app.pool.ownBullet.alloc().setup();
 				this.bullet.position.copyFrom(this.position);
 				this.bullet.power.set(0, -this.app.setting.ownBullet.speed);
 				this.scene.ownBullet.table.add(this.bullet);
-				this.bullet.onDead.subscribe(new oskn.Observer().setup(this, function (self) {
+				var disposer = this.bullet.onDead.subscribe(new oskn.Observer().setup(this, function (self) {
 					self.bullet = null;
 				}));
+				this.bulletDisposer.add(disposer);
 			}
 		}
 		var v = this.app.pool.vector2.alloc();
