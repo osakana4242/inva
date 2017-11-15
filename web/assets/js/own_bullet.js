@@ -3,8 +3,8 @@ oskn.namespace('oskn', function () {
 	oskn.OwnBullet = function(app) {
 		this.app = app;
 		this.sm = this.createStates();
-		this.onFree = Subject();
-		this.onDead = Subject();
+		this.onFree = new oskn.Subject();
+		this.onDead = new oskn.Subject();
 		this.isDead_ = false;
 	};
 

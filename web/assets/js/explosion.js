@@ -22,8 +22,8 @@ oskn.namespace('oskn', function () {
 	this.Explosion = function(app) {
 		this.app = app;
 		this.sm = this.createStates();
-		this.onFree = Subject();
-		this.onDead = Subject();
+		this.onFree = new oskn.Subject();
+		this.onDead = new oskn.Subject();
 		this.isDead_ = false;
 		this.progress_ = 0.0;
 	};

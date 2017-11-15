@@ -1,54 +1,71 @@
+oskn.namespace('oskn', function () {
 
-phina.define("Observer", {
-	init: function () {
-	},
-	setup: function (target, func) {
+	oskn.Observer = function () {
+	};
+
+	var cls = oskn.Observer;
+
+	cls.prototype.setup = function (target, func) {
 		this.target = target;
 		this.func = func;
 		return this;
-	},
-	onNext: function () {
+	};
+
+	cls.prototype.onNext = function () {
 		this.func.call(this.target, this.target);
-	},
+	};
+
 });
 
-phina.define("SubjectUnsubscriber", {
-	init: function () {
+oskn.namespace('oskn', function () {
+	oskn.SubjectUnsubscriber = function() {
 		this.subject = null;
 		this.observer = null;
-	},
-	setup: function (subject, observer) {
+	};
+
+	var cls = oskn.SubjectUnsubscriber;
+
+	cls.prototype.setup = function (subject, observer) {
 		this.subject = subject;
 		this.observer = observer;
-	},
-	free: function () {
+	};
+
+	cls.prototype.free = function () {
 		this.subject = null;
-	},
-	dispose: function () {
+	};
+
+	cls.prototype.dispose = function () {
 		var index = this.subject.observers.findIndex(function (item) {
 			return item === observer;
 		}, this.observer);
 		this.subject.observers.splice(index, 1);
-	},
+	};
+
 });
 
-phina.define("Subject", {
-	init: function () {
+oskn.namespace('oskn', function () {
+	oskn.Subject = function() {
 		this.observers = [];
 		this.workObservers = [];
-	},
-	setup: function () {
-	},
-	onNext: function () {
+	};
+
+	var cls = oskn.Subject;
+
+	cls.prototype.setup = function () {
+	};
+
+	cls.prototype.onNext = function () {
 		this.workObservers.splice(0, this.workObservers.length);
 		this.workObservers.push.apply(this.workObservers, this.observers);
 		this.workObservers.forEach(function (item) {
 			item.onNext();
 		});
-	},
-	subscribe: function(observer) {
+	};
+
+	cls.prototype.subscribe = function(observer) {
 		this.observers.push(observer);
-		return SubjectUnsubscriber(this, observer);
-	},
+		return new oskn.SubjectUnsubscriber(this, observer);
+	};
+
 });
 

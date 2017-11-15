@@ -6,15 +6,15 @@ oskn.namespace('oskn', function () {
 		var app = this.app;
 
 		this.pool = {
-			vector2: InstancePool(function() {
+			vector2: new oskn.InstancePool(function() {
 				return Vector2(0, 0);
 			}),
 
-			rect: InstancePool(function() {
+			rect: new oskn.InstancePool(function() {
 				return Rect(0, 0, 0, 0);
 			}),
 
-			button: InstancePool(function() {
+			button: new oskn.InstancePool(function() {
 				return {
 					stay: false,
 					up: false,
@@ -22,15 +22,15 @@ oskn.namespace('oskn', function () {
 				};
 			}),
 
-			enemy: InstancePool(function() {
+			enemy: new oskn.InstancePool(function() {
 				return new oskn.Enemy(app);
 			}),
 
-			ownBullet: InstancePool(function() {
+			ownBullet: new oskn.InstancePool(function() {
 				return new oskn.OwnBullet(app);
 			}),
 
-			explosion: InstancePool(function() {
+			explosion: new oskn.InstancePool(function() {
 				return new oskn.Explosion(app);
 			}),
 		};

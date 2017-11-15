@@ -1,6 +1,6 @@
 
 oskn.namespace('oskn', function () {
-	this.Ingame = function(stateId, app) {
+	oskn.Ingame = function(stateId, app) {
 		super_.call(this, stateId);
 		this.app = app;
 		this.sm = this.createStates();
@@ -8,7 +8,7 @@ oskn.namespace('oskn', function () {
 		this.resultType = ResultType.NONE;
 	};
 
-	var cls = this.Ingame;
+	var cls = oskn.Ingame;
 	var super_ = oskn.StateBehaviour;
 	oskn.inherits(cls, super_);
 

@@ -64,7 +64,7 @@ oskn.namespace('oskn', function () {
 				this.bullet.position.copyFrom(this.position);
 				this.bullet.power.set(0, -this.app.setting.ownBullet.speed);
 				this.scene.ownBullet.table.add(this.bullet);
-				this.bullet.onDead.subscribe(Observer().setup(this, function (self) {
+				this.bullet.onDead.subscribe(new oskn.Observer().setup(this, function (self) {
 					self.bullet = null;
 				}));
 			}

@@ -1,10 +1,13 @@
-phina.define("InstancePool", {
-	init: function(factory) {
+oskn.namespace('oskn', function () {
+
+	oskn.InstancePool = function(factory) {
 		this.factory = factory;
 		this.items = [];
-	},
+	};
 
-	alloc: function() {
+	var cls = oskn.InstancePool;
+
+	cls.prototype.alloc = function() {
 		if (this.items.length <= 0) {
 			var item = this.factory();
 			var self = this;
@@ -20,12 +23,13 @@ phina.define("InstancePool", {
 			var item = this.items.pop();
 			return item;
 		}
-	},
+	};
 
-	free: function(item) {
+	cls.prototype.free = function(item) {
 		item.poolInstanceId = (item.poolInstanceId + 1) & 0x7fffffff;
 		this.items.push(item);
-	},
+	};
+
 });
 
 oskn.namespace('oskn', function () {
@@ -53,5 +57,6 @@ oskn.namespace('oskn', function () {
 			return this.value_;
 		return null;
 	};
+
 });
 
